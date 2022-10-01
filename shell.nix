@@ -34,6 +34,7 @@ pkgs.mkShell {
     pre-commit
     shellcheck
     terraform
+    unzip
     yamllint
 
     python-packages

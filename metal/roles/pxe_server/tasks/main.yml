@@ -29,13 +29,19 @@
 
 - name: Extract x86_64 boot image
   ansible.builtin.command:
-    cmd: "xorriso -osirrox on -indev {{ iso-x86_64.dest }} -extract / {{ role_path }}/files/data/os/x86_64"
+    cmd: "xorriso -osirrox on -indev {{ iso_x86_64.dest }} -extract / {{ role_path }}/files/data/os/x86_64"
     creates: "{{ role_path }}/files/data/os/x86_64/.treeinfo"
 
 - name: Extract aarch64 boot image
   ansible.builtin.command:
-    cmd: "xorriso -osirrox on -indev {{ iso-aarch64.dest }} -extract / {{ role_path }}/files/data/os/aarch64"
+    cmd: "xorriso -osirrox on -indev {{ iso_aarch64.dest }} -extract / {{ role_path }}/files/data/os/aarch64"
     creates: "{{ role_path }}/files/data/os/aarch64/.treeinfo"
+
+- name: Copy rpi4 firmware
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/data/os/rpi4_uefi_firmware/"
+    dest: "{{ role_path }}/files/data/os/tftp/"
+    mode: 0644
 
 - name: Generate dnsmasq config
   ansible.builtin.template:
@@ -46,13 +52,13 @@
 - name: Generate x86_64 GRUB config
   ansible.builtin.template:
     src: grub_x86_64.cfg.j2
-    dest: "{{ role_path }}/files/data/pxe-config/x86_64_grub.cfg"
+    dest: "{{ role_path }}/files/data/os/tftp/x86_64/grub.cfg"
     mode: 0644
 
 - name: Generate aarch64 GRUB config
   ansible.builtin.template:
     src: grub_aarch64.cfg.j2
-    dest: "{{ role_path }}/files/data/pxe-config/aarch64_grub.cfg"
+    dest: "{{ role_path }}/files/data/os/tftp/aarch64/grub.cfg"
     mode: 0644
 
 - name: Generate init config for each machine
@@ -61,6 +67,42 @@
     dest: "{{ role_path }}/files/data/init-config/{{ hostvars[item]['mac'] }}.ks"
     mode: 0644
   loop: "{{ groups['metal'] }}"
+
+- name: Copy x86_64 grub efi loader
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/data/os/x86_64/EFI/BOOT/grubx64.efi"
+    dest: "{{ role_path }}/files/data/os/tftp/x86_64/grubx64.efi"
+    mode: 0644
+
+- name: Copy aarch64 grub efi loader
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/data/os/x86_64/EFI/BOOT/grubaa64.efi"
+    dest: "{{ role_path }}/files/data/os/tftp/aarch64/grubaa64.efi"
+    mode: 0644
+
+- name: Copy x86_64 initrd
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/data/os/x86_64/images/pxeboot/initrd.img"
+    dest: "{{ role_path }}/files/data/os/tftp/x86_64/initrd.img"
+    mode: 0644
+
+- name: Copy aarch64 initrd
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/data/os/aarch64/images/pxeboot/initrd.img"
+    dest: "{{ role_path }}/files/data/os/tftp/aarch64/initrd.img"
+    mode: 0644
+
+- name: Copy x86_64 vmlinuz
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/data/os/x86_64/images/pxeboot/vmlinuz"
+    dest: "{{ role_path }}/files/data/os/tftp/x86_64/vmlinuz"
+    mode: 0644
+
+- name: Copy aarch64 vmlinuz
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/data/os/aarch64/images/pxeboot/vmlinuz"
+    dest: "{{ role_path }}/files/data/os/tftp/aarch64/vmlinuz"
+    mode: 0644
 
 - name: Start the ephemeral PXE server
   community.docker.docker_compose:
