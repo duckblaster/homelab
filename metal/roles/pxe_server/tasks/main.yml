@@ -1,15 +1,41 @@
-- name: Download boot image
+- name: Download x86_64 boot image
   ansible.builtin.get_url:
-    url: "{{ iso_url }}"
-    dest: "{{ role_path }}/files/data/iso/{{ iso_url | basename }}"
-    checksum: "{{ iso_checksum }}"
+    url: "{{ iso_x86_64_url }}"
+    dest: "{{ role_path }}/files/data/iso/x86_64/{{ iso_x86_64_url | basename }}"
+    checksum: "{{ iso_x86_64_checksum }}"
     mode: 0644
-  register: iso
+  register: iso_x86_64
 
-- name: Extract boot image
+- name: Download aarch64 boot image
+  ansible.builtin.get_url:
+    url: "{{ iso_aarch64_url }}"
+    dest: "{{ role_path }}/files/data/iso/aarch64/{{ iso_aarch64_url | basename }}"
+    checksum: "{{ iso_aarch64_checksum }}"
+    mode: 0644
+  register: iso_aarch64
+
+- name: Download rpi4 uefi firmware
+  ansible.builtin.get_url:
+    url: "{{ rpi4_uefi_firmware_url }}"
+    dest: "{{ role_path }}/files/data/iso/aarch64/{{ rpi4_uefi_firmware_url | basename }}"
+    #checksum: "{{ rpi4_uefi_firmware_checksum }}"
+    mode: 0644
+  register: rpi4_uefi_firmware
+
+- name: Extract rpi4 uefi firmware
   ansible.builtin.command:
-    cmd: "xorriso -osirrox on -indev {{ iso.dest }} -extract / {{ role_path }}/files/data/os"
-    creates: "{{ role_path }}/files/data/os/.treeinfo"
+    cmd: "unzip {{ rpi4_uefi_firmware.dest }} -d {{ role_path }}/files/data/os/rpi4_uefi_firmware"
+    creates: "{{ role_path }}/files/data/os/rpi4_uefi_firmware/config.txt"
+
+- name: Extract x86_64 boot image
+  ansible.builtin.command:
+    cmd: "xorriso -osirrox on -indev {{ iso-x86_64.dest }} -extract / {{ role_path }}/files/data/os/x86_64"
+    creates: "{{ role_path }}/files/data/os/x86_64/.treeinfo"
+
+- name: Extract aarch64 boot image
+  ansible.builtin.command:
+    cmd: "xorriso -osirrox on -indev {{ iso-aarch64.dest }} -extract / {{ role_path }}/files/data/os/aarch64"
+    creates: "{{ role_path }}/files/data/os/aarch64/.treeinfo"
 
 - name: Generate dnsmasq config
   ansible.builtin.template:
@@ -17,10 +43,16 @@
     dest: "{{ role_path }}/files/data/pxe-config/dnsmasq.conf"
     mode: 0644
 
-- name: Generate GRUB config
+- name: Generate x86_64 GRUB config
   ansible.builtin.template:
-    src: grub.cfg.j2
-    dest: "{{ role_path }}/files/data/pxe-config/grub.cfg"
+    src: grub_x86_64.cfg.j2
+    dest: "{{ role_path }}/files/data/pxe-config/x86_64_grub.cfg"
+    mode: 0644
+
+- name: Generate aarch64 GRUB config
+  ansible.builtin.template:
+    src: grub_aarch64.cfg.j2
+    dest: "{{ role_path }}/files/data/pxe-config/aarch64_grub.cfg"
     mode: 0644
 
 - name: Generate init config for each machine

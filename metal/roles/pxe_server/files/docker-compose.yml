@@ -5,10 +5,15 @@ services:
     build: ./dnsmasq
     volumes:
       - ./data/pxe-config/dnsmasq.conf:/etc/dnsmasq.conf
-      - ./data/pxe-config/grub.cfg:/tftp/grub.cfg
-      - ./data/os/EFI/BOOT/grubx64.efi:/tftp/grubx64.efi
-      - ./data/os/images/pxeboot/initrd.img:/tftp/initrd.img
-      - ./data/os/images/pxeboot/vmlinuz:/tftp/vmlinuz
+      - ./data/os/rpi4_uefi_firmware/:/tftp/
+      - ./data/pxe-config/x86_64_grub.cfg:/tftp/x86_64/grub.cfg
+      - ./data/os/x86_64/EFI/BOOT/grubx64.efi:/tftp/x86_64/grubx64.efi
+      - ./data/os/x86_64/images/pxeboot/initrd.img:/tftp/x86_64/initrd.img
+      - ./data/os/x86_64/images/pxeboot/vmlinuz:/tftp/x86_64/vmlinuz
+      - ./data/pxe-config/aarch64_grub.cfg:/tftp/aarch64/grub.cfg
+      - ./data/os/aarch64/EFI/BOOT/grubaa64.efi:/tftp/aarch64/grubaa64.efi
+      - ./data/os/aarch64/images/pxeboot/initrd.img:/tftp/aarch64/initrd.img
+      - ./data/os/aarch64/images/pxeboot/vmlinuz:/tftp/aarch64/vmlinuz
     network_mode: host
     cap_add:
       - NET_ADMIN
